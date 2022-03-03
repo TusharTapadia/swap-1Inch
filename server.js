@@ -4,7 +4,26 @@ var value = [];
 var address = [];
 const map = new Map();
 
+
+connectWallet = async () =>{
+    if (window.ethereum) {
+        window.web3 = new Web3(window.ethereum);
+        await window.ethereum.enable();
+        console.log("Connected");
+      } else {
+        alert("Metamask not found");
+      }
+}
+
+const connect = document.getElementById("wallet");
+connect.onclick = connectWallet;
 getTokens = async () => {
+
+
+
+
+
+
     await axios.get('https://api.1inch.io/v4.0/56/tokens').then(function (response) {
         var data = response.data;
         var i = 0;
