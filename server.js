@@ -2,6 +2,8 @@ const axios = require('axios')
 const Web3 = require('web3');
 var value = [];
 var address = [];
+var protocolMap = new Map();
+protocolMap.set('All','');
 const map = new Map();
 
 
@@ -18,11 +20,6 @@ connectWallet = async () =>{
 const connect = document.getElementById("wallet");
 connect.onclick = connectWallet;
 getTokens = async () => {
-
-
-
-
-
 
     await axios.get('https://api.1inch.io/v4.0/56/tokens').then(function (response) {
         var data = response.data;
@@ -73,6 +70,7 @@ const quoteApi = 'https://api.1inch.io/v4.0/56/quote';
 const checkAllowanceApi = 'https://api.1inch.io/v4.0/56/approve/allowance';
 const giveAllowanceApi = 'https://api.1inch.io/v4.0/56/approve/transaction';
 const swapApi = 'https://api.1inch.io/v4.0/56/swap';
+const protocolApi = 'https://api.1inch.io/v4.0/56/liquidity-sources';
 
 getQuote = async () => {
 
@@ -84,15 +82,36 @@ getQuote = async () => {
 
     var val = document.getElementById('swapValue')
 
+    var selected = [];
+    for (var option of document.getElementById('protocolList').options)
+    {
+        if (option.selected) {
+            selected.push(option.value);
+        }
+    }
+    
+    var finalList = [];
+
+    // if(selected[0]=='All'){
+    //     finalList = ''
+    // }else{
+    //     finalList = selected.toString();
+    // }
+
+    for (let i=0;i<selected.length;i++){
+        finalList[i]=protocolMap.get(selected[i]);
+    }
+
     const response = await axios.get(quoteApi,
         {
             params: {
                 fromTokenAddress: map.get(t1data),
                 toTokenAddress: map.get(t2data),
-                amount: val.value
+                amount: val.value,
+                protocols:finalList.toString()
             }
         }).then(function (response) {
-            console.log(response.data)
+            console.log(response)
         })
 }
 
@@ -189,6 +208,26 @@ swapFunction = async () => {
 
     var val = document.getElementById('swapValue')
 
+    var selected = [];
+    for (var option of document.getElementById('protocolList').options)
+    {
+        if (option.selected) {
+            selected.push(option.value);
+        }
+    }
+    
+    var finalList = [];
+
+    // if(selected[0]=='All'){
+    //     finalList = ''
+    // }else{
+    //     finalList = selected.toString();
+    // }
+
+    for (let i=0;i<selected.length;i++){
+        finalList[i]=protocolMap.get(selected[i]);
+    }
+
     const swapParams = {
         fromTokenAddress: map.get(t1data),
         toTokenAddress: map.get(t2data),
@@ -197,6 +236,7 @@ swapFunction = async () => {
         slippage: 1,
         disableEstimate: false,
         allowPartialFill: false,
+        protocols:finalList.toString()
     };
 
 
@@ -216,6 +256,47 @@ swapFunction = async () => {
 
 const swapButton = document.getElementById("swapBtn");
 swapButton.onclick = swapFunction;
+
+
+getProtocolData = async () =>{
+    var list;
+    var id = [];
+    var title = [];
+    var i=0;
+    var j=0;
+    await axios.get(protocolApi).then(function(response){
+        Object.keys(response.data.protocols).forEach(function(k){
+            id[i] = response.data.protocols[k].id;
+            title[i] = response.data.protocols[k].title;
+            i++; 
+        })
+   })
+
+   for (let i = 0; i < id.length; i++) {
+    protocolMap.set(title[i], id[i]);
+    };
+
+    // console.log(protocolMap);
+
+   var select = document.getElementById("protocolList");
+        console.log("Protocol List")
+        var length = select.options.length;
+        for (i = length -1 ; i > 1; i--) {
+            select.options[i] = null;
+        }
+        for (var i = 0; i < title.length; i++) {
+            var opt = title[i];
+            var el = document.createElement("option");
+            el.textContent = opt;
+            el.value = opt;
+            select.appendChild(el);
+        }
+
+//    console.log(title);
+//    console.log(id);
+}
+
+getProtocolData();
 
 
 
